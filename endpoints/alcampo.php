@@ -19,7 +19,7 @@ if (!isset($_GET['set'])) {
 // Seguridad: eliminamos espacios y caracteres invisibles
 $set_raw = trim($_GET['set']);
 
-// Seguridad: comprobamos el formato de id
+// Seguridad: comprobamos el formato de set_raw
 if (!preg_match('/^[0-9]+$/', $set_raw)) {
     echo json_encode([
         "error" => "Formato invalido. Solo se permiten numeros"]);
@@ -130,7 +130,7 @@ foreach ($products as $product) {
     if ($outOfStockNode->length > 0) {
         $status = "Agotado";
     } else {
-        $status = ($price > 0) ? "Disponible" : "No disponible";
+        $status = ($price > 0) ? "Disponible" : "Agotado";
     }
 
     // Si hemos llegado hasta aqui, insertamos la informacion en la base de datos

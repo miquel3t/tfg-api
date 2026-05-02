@@ -12,19 +12,25 @@ $endpoint = substr($path, strlen($base));
 
 switch (true) {
 
+    //Endpoint bestprice: busca el mejor precio en todas las tiendas
+    case preg_match('#^/bestprice/([^/]+)$#', $endpoint, $matches):
+        $_GET['set'] = $matches[1];
+        require API_ROOT . '/endpoints/bestprice.php';
+        break;
+
     //Endpoint abacus: busca un set en Abacus
     case preg_match('#^/abacus/([^/]+)$#', $endpoint, $matches):
         $_GET['set'] = $matches[1];
         require API_ROOT . '/endpoints/abacus.php';
         break;
         
-    //Endpoint abacus: busca un set en Alcampo
+    //Endpoint alcampo: busca un set en Alcampo
     case preg_match('#^/alcampo/([^/]+)$#', $endpoint, $matches):
         $_GET['set'] = $matches[1];
         require API_ROOT . '/endpoints/alcampo.php';
         break;
 
-    //Endpoint abacus: busca un set en Brickoutique
+    //Endpoint brickoutique: busca un set en Brickoutique
     case preg_match('#^/brickoutique/([^/]+)$#', $endpoint, $matches):
         $_GET['set'] = $matches[1];
         require API_ROOT . '/endpoints/brickoutique.php';

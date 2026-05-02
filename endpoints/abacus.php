@@ -19,7 +19,7 @@ if (!isset($_GET['set'])) {
 // Seguridad: eliminamos espacios y caracteres invisibles
 $set_raw = trim($_GET['set']);
 
-// Seguridad: comprobamos el formato de id
+// Seguridad: comprobamos el formato de set_raw
 if (!preg_match('/^[0-9]+$/', $set_raw)) {
     echo json_encode([
         "error" => "Formato invalido. Solo se permiten numeros"]);
@@ -124,7 +124,7 @@ foreach ($products as $product) {
 
     // Buscamos la palabra 'esgotat' para comprobar si hay disponibilidad del set
     $statusNode = $xpath->query(".//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'esgotat')]", $product);
-    $status = ($statusNode->length > 0) ? "Agotado temporalmente" : "Disponible";
+    $status = ($statusNode->length > 0) ? "Agotado" : "Disponible";
 
     // Buscamos la URL del set
     $href = $nameNode->item(0)->getAttribute("href");

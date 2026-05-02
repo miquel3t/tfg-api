@@ -18,7 +18,7 @@ if (!isset($_GET['set'])) {
 // Seguridad: eliminamos espacios y caracteres invisibles
 $set_raw = trim($_GET['set']);
 
-// Seguridad: comprobamos el formato de id
+// Seguridad: comprobamos el formato de set_raw
 if (!preg_match('/^[0-9]+$/', $set_raw)) {
     echo json_encode([
         "error" => "Formato invalido. Solo se permiten numeros"]);
@@ -78,7 +78,7 @@ $xpath = new DOMXPath($dom);
 
 // Buscamos en los UL con la clase 'products', los LI que tambien tengan
 // la clase 'product'
-$products = $xpath->query("//ul[contains(@class,'products')]//li[contains(@class,'product')]");
+$products = $xpath->query("//ul[contains(@class,'products')]//li[contains(normalize-space(@class),'product')]");
 
 // Si no hay ninguno, no hemos encontrado el Lego 
 if ($products->length === 0) {
@@ -94,20 +94,18 @@ if ($products->length === 0) {
 // Si no hay ninguno, no hemos encontrado el Lego 
 foreach ($products as $product) {
 
-    // Buscamos el titulo del Lego
-    $nameNode = $xpath->query(".//h2[contains(@class,'woocommerce-loop-product__title')]", $product);
+    // Buscamos la URL del set
+    $hrefNode = $xpath->query(".//a[contains(@class,'woocommerce-LoopProduct-link')]", $product);
 
-    // Si no lo encuentra, saltamos al siguiente    
-    if ($nameNode->length === 0) continue;
-    
-    // Extraemos el titulo del set de $nameNode
-    $titulo = trim($nameNode->item(0)->textContent);
+    if ($hrefNode->length === 0) continue;
 
-    // Comprobamos que el id del set este contenido en el titulo
-    if (!preg_match("/\b" . preg_quote($id, '/') . "\b/", $titulo)) {
+    $productUrl = $hrefNode->item(0)->getAttribute("href");
+
+    // Comprobamos si el id del set esta contenido en la URL
+    if (strpos($productUrl, (string)$id) === false) {
         continue;
     }
-
+    
     // Buscamos el precio
     $priceNode = $xpath->query(".//span[contains(@class,'price')]//ins//bdi", $product);
 
@@ -124,12 +122,6 @@ foreach ($products as $product) {
     } else {
         $price = 0;
     }
-
-    // Buscarmos la URL del set
-    $hrefNode = $xpath->query(".//a[contains(@class,'woocommerce-LoopProduct-link')]", $product);
-    if ($hrefNode->length === 0) continue;
-
-    $productUrl = $hrefNode->item(0)->getAttribute("href");
 
     // Comprobamos la disponibilidad. Hay un enlace A HREF con la clase 'add_to_cart_button'
     $addToCart = $xpath->query(".//a[contains(@class,'add_to_cart_button')]", $product);
