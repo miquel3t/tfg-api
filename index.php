@@ -17,6 +17,12 @@ switch (true) {
         $_GET['set'] = $matches[1];
         require API_ROOT . '/endpoints/abacus.php';
         break;
+        
+    //Endpoint abacus: busca un set en Alcampo
+    case preg_match('#^/alcampo/([^/]+)$#', $endpoint, $matches):
+        $_GET['set'] = $matches[1];
+        require API_ROOT . '/endpoints/alcampo.php';
+        break;
 
     //Endpoint setinfo: muestra informacion de un set
     case preg_match('#^/setinfo/([^/]+)$#', $endpoint, $matches):

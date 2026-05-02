@@ -5,7 +5,7 @@ header("Content-Type: application/json");
 // Incluimos el fichero de configuracion database.inc
 require_once __DIR__ . '/../config/database.inc';
 
-$site = "Abacus";
+$site = "Alcampo";
 $pricedate = date("Ymd");
 
 
@@ -33,20 +33,16 @@ $set_legoprice = db_get_legoprice($db, $id, $site, $pricedate);
 
 // Tenemos el precio en la base de datos
 if ($set_legoprice) {
-    // Mostramos el JSON con los resultados
     echo json_encode($set_legoprice);
     exit;
 }
 
-// EL PRECIO NO ESTA EN LA BASE DE DATOS: BUSCAMOS EN ABACUS
-
+// EL PRECIO NO ESTA EN LA BASE DE DATOS: BUSCAMOS EN ALCAMPO
 // Construimos la peticioin URL con cUrl
-// Utilizamos la API interna de Abacus demandware.store
-$idEncoded = urlencode($id);
-$apiUrl = "https://www.abacus.coop/on/demandware.store/Sites-abacus_es-Site/ca_ES/Search-UpdateGrid?q=" . $idEncoded;
+$searchUrl = "https://www.compraonline.alcampo.es/search?q=lego%20" . urlencode($id);
 
 $ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $apiUrl);
+curl_setopt($ch, CURLOPT_URL, $searchUrl);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
@@ -57,11 +53,11 @@ curl_setopt($ch, CURLOPT_USERAGENT,
 $html = curl_exec($ch);
 curl_close($ch);
 
-// Si no hay respuesta de Abacus, mostramos un error
+// Si no hay respuesta de Alcampo, mostramos un error
 if (!$html) {
     die(json_encode([
         "idlegoset" => $id,
-        "error" => "No se han podido obtener datos de Abacus",
+        "error" => "No se han podido obtener datos de Alcampo",
         "site" => $site,
         "pricedate" => $pricedate
     ]));
@@ -75,8 +71,8 @@ libxml_clear_errors();
 
 $xpath = new DOMXPath($dom);
 
-// Buscamos los DIV con el valor product-tile en el atributo class
-$products = $xpath->query("//div[contains(@class,'product-tile')]");
+// Buscamos los DIV con el valor product-card-container en el atributo class
+$products = $xpath->query("//div[contains(@class,'product-card-container')]");
 
 // Si no hay ninguno, no hemos encontrado el Lego 
 if ($products->length === 0) {
@@ -92,9 +88,9 @@ if ($products->length === 0) {
 // Revisamos los sets encontrados
 foreach ($products as $product) {
 
-    // Buscamos un enlace A con el valor link en el atributo class
-    $nameNode = $xpath->query(".//a[contains(@class,'link')]", $product);
-    
+    // Buscamos el nombre del Lego 
+    $nameNode = $xpath->query(".//h3[@data-test='fop-title']", $product);
+
     // Si no lo encuentra, saltamos al siguiente
     if ($nameNode->length === 0) continue;
 
@@ -106,25 +102,32 @@ foreach ($products as $product) {
         continue;
     }
 
-    // Buscamos el precio del set dentro de un span con class="value"
-    // que esta dentro de otro span class="sales" para encontrar el precio
-    // Si no lo encontramos, saltamos al siguiente
-    $priceNode = $xpath->query(".//span[contains(@class,'sales')]//span[contains(@class,'value')]", $product);
-    if ($priceNode->length === 0) continue;
-
-    $price = trim($priceNode->item(0)->textContent);
+    $priceNode = $xpath->query(".//span[@data-test='fop-price']", $product);
 
     // Formateamos el precio para eliminar el simbolo de euro, espacios y poner . como semparador de decimales
-    $price = str_replace(['€', ' ', "\xc2\xa0"], '', $price); // afegim NBSP
-    $price = str_replace(',', '.', $price);
-
-    // Buscamos la palabra 'esgotat' para comprobar si hay disponibilidad del set
-    $statusNode = $xpath->query(".//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'esgotat')]", $product);
-    $status = ($statusNode->length > 0) ? "Agotado temporalmente" : "Disponible";
+    if ($priceNode->length > 0) {
+        $price = trim($priceNode->item(0)->textContent);
+        $price = str_replace(['€', ' ', "\xc2\xa0"], '', $price);
+        $price = str_replace(',', '.', $price);
+    } else {
+        $price = 0;
+    }
 
     // Buscamos la URL del set
-    $href = $nameNode->item(0)->getAttribute("href");
-    $productUrl = "https://www.abacus.coop" . $href;
+    $hrefNode = $xpath->query(".//a[@data-test='fop-product-link']", $product);
+    if ($hrefNode->length === 0) continue;
+
+    $href = $hrefNode->item(0)->getAttribute("href");
+    $productUrl = "https://www.compraonline.alcampo.es" . $href;
+
+    // Comprobamos si hay disponibilidad
+    $outOfStockNode = $xpath->query(".//span[@data-test='product-card-out-of-stock-badge']", $product);
+
+    if ($outOfStockNode->length > 0) {
+        $status = "Agotado";
+    } else {
+        $status = ($price > 0) ? "Disponible" : "No disponible";
+    }
 
     // Si hemos llegado hasta aqui, insertamos la informacion en la base de datos
     db_insert_legoprice($db, $id, $price, $site, $productUrl, $pricedate, $status);
@@ -137,7 +140,7 @@ foreach ($products as $product) {
         "url" => $productUrl,
         "pricedate" => $pricedate,
         "status" => $status,
-        "origin" => "Abacus"
+        "origin" => "Alcampo"
     ]);
     exit;
 }
