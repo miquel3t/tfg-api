@@ -12,6 +12,12 @@ $endpoint = substr($path, strlen($base));
 
 switch (true) {
 
+    //Endpoint abacus: busca un set en Abacus
+    case preg_match('#^/abacus/([^/]+)$#', $endpoint, $matches):
+        $_GET['set'] = $matches[1];
+        require API_ROOT . '/endpoints/abacus.php';
+        break;
+
     //Endpoint setinfo: muestra informacion de un set
     case preg_match('#^/setinfo/([^/]+)$#', $endpoint, $matches):
         $_GET['set'] = $matches[1];

@@ -22,3 +22,15 @@ CREATE TABLE minifiglegoset (
 );
 CREATE INDEX idx_minifiglegoset_idlegoset ON minifiglegoset(idlegoset);
 CREATE INDEX idx_minifiglegoset_idminifig ON minifiglegoset(idminifig);
+CREATE TABLE legoprice (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    idlegoset INTEGER NOT NULL,
+    price NUMERIC(10,2) NOT NULL,
+    site TEXT CHECK(length(site) <= 20),
+    url TEXT CHECK(length(url) <= 255),
+    pricedate INTEGER NOT NULL,
+    status TEXT CHECK(length(status) <= 50)
+);
+CREATE TABLE sqlite_sequence(name,seq);
+CREATE INDEX idx_legoprice_lookup
+ON legoprice (idlegoset, site, pricedate);
