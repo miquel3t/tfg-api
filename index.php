@@ -24,6 +24,12 @@ switch (true) {
         require API_ROOT . '/endpoints/alcampo.php';
         break;
 
+    //Endpoint abacus: busca un set en Brickoutique
+    case preg_match('#^/brickoutique/([^/]+)$#', $endpoint, $matches):
+        $_GET['set'] = $matches[1];
+        require API_ROOT . '/endpoints/brickoutique.php';
+        break;
+
     //Endpoint setinfo: muestra informacion de un set
     case preg_match('#^/setinfo/([^/]+)$#', $endpoint, $matches):
         $_GET['set'] = $matches[1];

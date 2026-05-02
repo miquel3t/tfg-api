@@ -17,14 +17,18 @@ if (!isset($_GET['set'])) {
 }
 
 // Seguridad: eliminamos espacios y caracteres invisibles
-$id = trim($_GET['set']);
+$set_raw = trim($_GET['set']);
 
 // Seguridad: comprobamos el formato de id
-if (!preg_match('/^[0-9]+$/', $_GET['set'])) {
+if (!preg_match('/^[0-9]+$/', $set_raw)) {
     echo json_encode([
         "error" => "Formato invalido. Solo se permiten numeros"]);
     exit;
 }
+
+// Convertimos a numero entero
+$id = intval($set_raw);
+
 
 // INTENTAMOS OBTENER EL PRECIO DESDE LA BASE DE DATOS
 
